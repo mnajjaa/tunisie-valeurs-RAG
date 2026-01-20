@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-import os
 import re
+from pathlib import Path
 from statistics import median
 
 import fitz  # PyMuPDF
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 WHITESPACE_RE = re.compile(r"\s+")
 PAGE_NUMBER_RE = re.compile(r"^\d{1,3}$")
-BULLET_CHARS = "\u2022\u2013\u25a0\u25aa\u25cf\u25e6\u2023\u00b7\u2219"
+BULLET_CHARS = "\\u2022\\u2013\\u25a0\\u25aa\\u25cf\\u25e6\\u2023\\u00b7\\u2219"
 LIST_PREFIX_RE = re.compile(
     r"^\s*(?:[-*" + BULLET_CHARS + r"]|\d{1,3}[.)]|[a-zA-Z][.)]|\([a-zA-Z0-9]{1,3}\))\s+"
 )
@@ -30,6 +30,32 @@ HEADER_FOOTER_THRESHOLD = 0.1
 
 def _normalize_text(value: str) -> str:
     return WHITESPACE_RE.sub(" ", value or "").strip()
+
+
+def resolve_pdf_path(local_path: str) -> Path:
+    if not local_path:
+        raise FileNotFoundError("PDF path is empty.")
+
+    path = Path(local_path)
+    candidates = []
+    if path.is_absolute():
+        if path.is_file():
+            return path
+        candidates.append(path)
+
+    backend_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[3]
+
+    for root in (backend_root, repo_root):
+        candidate = (root / path).resolve()
+        candidates.append(candidate)
+        if candidate.is_file():
+            return candidate
+
+    attempted = ", ".join(str(candidate) for candidate in candidates)
+    raise FileNotFoundError(
+        f"PDF not found for local_path='{local_path}'. Tried: {attempted}"
+    )
 
 
 def is_page_number(text: str) -> bool:
@@ -201,7 +227,7 @@ def extract_structured_text(document_id: int, db: Session, overwrite: bool = Tru
     if not document:
         raise ValueError(f"Document {document_id} not found")
 
-    if not document.local_path or not os.path.isfile(document.local_path):
+    if not document.local_path:
         error = f"local_path_missing: {document.local_path}"
         document.status = "failed"
         document.error_message = error
@@ -235,6 +261,7 @@ def extract_structured_text(document_id: int, db: Session, overwrite: bool = Tru
             }
 
     try:
+        resolved_path = resolve_pdf_path(document.local_path)
         if overwrite:
             db.query(DocumentBlock).filter(DocumentBlock.document_id == document_id).delete(
                 synchronize_session=False
@@ -246,7 +273,7 @@ def extract_structured_text(document_id: int, db: Session, overwrite: bool = Tru
         titles_count = 0
         list_items_count = 0
 
-        with fitz.open(document.local_path) as pdf_doc:
+        with fitz.open(str(resolved_path)) as pdf_doc:
             document.page_count = pdf_doc.page_count
             pages_processed = pdf_doc.page_count
             all_pages: list[list[dict]] = []

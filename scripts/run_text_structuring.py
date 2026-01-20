@@ -43,31 +43,44 @@ def main() -> None:
         "titles": 0,
         "list_items": 0,
     }
-    statuses = ("parsed", "downloaded")
+    statuses = ("parsed", "downloaded", "embedded", "text_structured", "failed")
 
     with SessionLocal() as db:
-        query = (
-            db.query(Document)
+        doc_ids = (
+            db.query(Document.id)
             .filter(Document.status.in_(statuses), Document.local_path.isnot(None))
             .order_by(Document.id.asc())
+            .all()
         )
-        for doc in query.yield_per(10):
-            result = extract_structured_text(doc.id, db, overwrite=True)
-            status = result.get("status", "ok")
-            print(
-                f"{doc.id}\t{status}\tpages={result.get('pages_processed', 0)}\t"
-                f"blocks={result.get('blocks_created', 0)}\t"
-                f"titles={result.get('titles_count', 0)}\t"
-                f"list_items={result.get('list_items_count', 0)}"
-            )
-            totals["documents"] += 1
-            if status == "failed":
+    doc_ids = [row[0] for row in doc_ids]
+
+    for doc_id in doc_ids:
+        totals["documents"] += 1
+        with SessionLocal() as db:
+            try:
+                result = extract_structured_text(doc_id, db, overwrite=True)
+            except Exception as exc:
                 totals["failed"] += 1
+                print(f"{doc_id}\tfailed\terror={exc}")
                 continue
-            totals["pages"] += result.get("pages_processed", 0)
-            totals["blocks"] += result.get("blocks_created", 0)
-            totals["titles"] += result.get("titles_count", 0)
-            totals["list_items"] += result.get("list_items_count", 0)
+
+        status = result.get("status", "ok")
+        if status == "failed":
+            totals["failed"] += 1
+            error = result.get("error") or "unknown_error"
+            print(f"{doc_id}\tfailed\terror={error}")
+            continue
+
+        print(
+            f"{doc_id}\tok\tpages={result.get('pages_processed', 0)}\t"
+            f"blocks={result.get('blocks_created', 0)}\t"
+            f"titles={result.get('titles_count', 0)}\t"
+            f"list_items={result.get('list_items_count', 0)}"
+        )
+        totals["pages"] += result.get("pages_processed", 0)
+        totals["blocks"] += result.get("blocks_created", 0)
+        totals["titles"] += result.get("titles_count", 0)
+        totals["list_items"] += result.get("list_items_count", 0)
 
     print(
         "TOTALS\t"
