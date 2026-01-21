@@ -1,0 +1,108 @@
+﻿<div class="chat-page">
+  <header class="chat-header">
+    <div class="brand">
+      <div class="brand-wordmark">
+        <div class="brand-title">
+          <span class="brand-title-main">Tunisie</span>
+          <span class="brand-title-accent">Valeurs</span>
+        </div>
+        <div class="brand-tagline">LA MAISON DE L'EPARGNANT</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="header-pill">Notes de recherche</span>
+      <span class="header-subtitle">Assistant RAG</span>
+    </div>
+  </header>
+
+  <section class="chat-shell">
+    <aside class="chat-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Conversations</span>
+        <button type="button" class="sidebar-new">Nouvelle</button>
+      </div>
+      <div class="sidebar-list">
+        <button type="button" class="sidebar-item active">
+          <span class="sidebar-item-title">T1 2026 - Strategie</span>
+          <span class="sidebar-item-meta">Derniere mise a jour: aujourd'hui</span>
+        </button>
+        <button type="button" class="sidebar-item">
+          <span class="sidebar-item-title">Bilan 2025 - Marche actions</span>
+          <span class="sidebar-item-meta">02/01/2026</span>
+        </button>
+        <button type="button" class="sidebar-item">
+          <span class="sidebar-item-title">Analyse secteur bancaire</span>
+          <span class="sidebar-item-meta">15/12/2025</span>
+        </button>
+        <button type="button" class="sidebar-item">
+          <span class="sidebar-item-title">Revue hebdo - Tendance</span>
+          <span class="sidebar-item-meta">08/12/2025</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="chat-main">
+      <div class="chat-messages" #scrollContainer>
+        <div
+          *ngFor="let message of messages"
+          class="message-row"
+          [class.user]="message.role === 'user'"
+          [class.assistant]="message.role === 'assistant'"
+          [class.error]="message.role === 'error'"
+        >
+          <div class="message-stack">
+            <div
+              class="bubble"
+              [class.user]="message.role === 'user'"
+              [class.assistant]="message.role === 'assistant'"
+              [class.error]="message.role === 'error'"
+            >
+              <p class="message-text">{{ message.content }}</p>
+            </div>
+            <details
+              *ngIf="message.role === 'assistant' && message.sources.length"
+              class="sources"
+            >
+              <summary>Sources ({{ message.sources.length }})</summary>
+              <div class="source" *ngFor="let source of message.sources">
+                <div class="source-title">{{ source.title }}</div>
+                <div class="source-meta">
+                  Page {{ source.page }} | Score {{ source.score | number: '1.2-2' }}
+                </div>
+                <div class="source-preview">{{ source.text_preview }}</div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div *ngIf="loading" class="message-row assistant pending">
+          <div class="message-stack">
+            <div class="bubble assistant loading-bubble">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="loading-text">Recherche...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <textarea
+          name="message"
+          [(ngModel)]="draft"
+          (keydown)="handleKeydown($event)"
+          [disabled]="loading"
+          rows="2"
+          placeholder="Posez votre question sur les notes de recherche..."
+          aria-label="Message input"
+        ></textarea>
+        <button
+          type="button"
+          (click)="sendMessage()"
+          [disabled]="loading || !draft.trim()"
+        >
+          Envoyer
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

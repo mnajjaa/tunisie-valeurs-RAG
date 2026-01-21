@@ -1,0 +1,56 @@
+﻿:root {
+  --font-body: 'Source Sans 3', sans-serif;
+  --font-display: 'Playfair Display', serif;
+  --page-bg: radial-gradient(900px circle at 0% -10%, rgba(0, 130, 75, 0.08) 0%, rgba(0, 130, 75, 0) 60%),
+    radial-gradient(800px circle at 100% 0%, rgba(0, 130, 75, 0.06) 0%, rgba(0, 130, 75, 0) 55%),
+    linear-gradient(180deg, #ffffff 0%, #f4f4f4 60%, #efefef 100%);
+  --panel: #ffffff;
+  --panel-strong: #ffffff;
+  --panel-subtle: #f6f6f6;
+  --text: #1d1d1d;
+  --muted: #6a6a6a;
+  --accent: #00824b;
+  --accent-strong: #0b6b3d;
+  --accent-soft: #e4f3eb;
+  --bubble-user: #00824b;
+  --bubble-user-text: #ffffff;
+  --bubble-assistant: #ffffff;
+  --bubble-assistant-text: #1d1d1d;
+  --border: #e2e2e2;
+  --shadow: 0 22px 48px rgba(0, 0, 0, 0.08);
+  --shadow-soft: 0 10px 22px rgba(0, 0, 0, 0.06);
+  --error-bg: #fff1f1;
+  --error-text: #8a1a1a;
+  --error-border: #f0b6b6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--page-bg);
+  overflow: hidden;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+textarea {
+  font-family: inherit;
+}

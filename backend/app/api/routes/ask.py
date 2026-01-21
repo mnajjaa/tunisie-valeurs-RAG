@@ -18,7 +18,7 @@ router = APIRouter(tags=["rag"])
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1)
     top_k: int = Field(6, ge=1, le=20)
-    document_id: Optional[int] = None
+    document_id: Optional[int] = Field(default=None, examples=[None])
 
 
 class SourceOut(BaseModel):

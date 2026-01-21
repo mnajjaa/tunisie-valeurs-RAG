@@ -27,6 +27,14 @@ pnpm-debug.log*
 dist/
 .angular/
 .cache/
+.npm/
+.pnpm-store/
+out-tsc/
+coverage/
+.vite/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
 
 # OS
 .DS_Store
